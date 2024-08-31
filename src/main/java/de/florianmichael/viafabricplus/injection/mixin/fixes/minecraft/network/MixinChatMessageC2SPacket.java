@@ -19,18 +19,21 @@
 
 package de.florianmichael.viafabricplus.injection.mixin.fixes.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.florianmichael.viafabricplus.fixes.ClientsideFixes;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ChatMessageC2SPacket.class)
 public abstract class MixinChatMessageC2SPacket {
 
-    @ModifyConstant(method = "write", constant = @Constant(intValue = 256))
-    private int modifyChatLength(int maxLength) {
-        return ClientsideFixes.getChatLength();
+    @WrapOperation(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/PacketByteBuf;writeString(Ljava/lang/String;I)Lnet/minecraft/network/PacketByteBuf;"))
+    private PacketByteBuf modifyChatLength(PacketByteBuf instance, String string, int maxLength, Operation<PacketByteBuf> original) {
+        // @WrapOperation used for mod compatibility, would otherwise use @ModifyConstant
+        return original.call(instance, string, ClientsideFixes.getChatLength());
     }
 
 }
